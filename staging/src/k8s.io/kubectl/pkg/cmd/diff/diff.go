@@ -93,6 +93,7 @@ type DiffOptions struct {
 
 	ServerSideApply bool
 	ForceConflicts  bool
+	FieldManager    string
 
 	OpenAPISchema    openapi.Resources
 	DiscoveryClient  discovery.DiscoveryInterface
@@ -297,6 +298,7 @@ type InfoObject struct {
 	Force           bool
 	ServerSideApply bool
 	ForceConflicts  bool
+	FieldManager    string
 	genericclioptions.IOStreams
 }
 
@@ -316,8 +318,9 @@ func (obj InfoObject) Merged() (runtime.Object, error) {
 			return nil, err
 		}
 		options := metav1.PatchOptions{
-			Force:  &obj.ForceConflicts,
-			DryRun: []string{metav1.DryRunAll},
+			Force:        &obj.ForceConflicts,
+			DryRun:       []string{metav1.DryRunAll},
+			FieldManager: obj.FieldManager,
 		}
 		return resource.NewHelper(obj.Info.Client, obj.Info.Mapping).Patch(
 			obj.Info.Namespace,
@@ -442,6 +445,7 @@ func (o *DiffOptions) Complete(f cmdutil.Factory, cmd *cobra.Command) error {
 
 	o.ServerSideApply = cmdutil.GetServerSideApplyFlag(cmd)
 	o.ForceConflicts = cmdutil.GetForceConflictsFlag(cmd)
+	o.FieldManager = cmdutil.GetFieldManagerFlag(cmd)
 	if o.ForceConflicts && !o.ServerSideApply {
 		return fmt.Errorf("--force-conflicts only works with --server-side")
 	}
@@ -530,6 +534,7 @@ func (o *DiffOptions) Run() error {
 				Force:           force,
 				ServerSideApply: o.ServerSideApply,
 				ForceConflicts:  o.ForceConflicts,
+				FieldManager:    o.FieldManager,
 				IOStreams:       o.Diff.IOStreams,
 			}
 
